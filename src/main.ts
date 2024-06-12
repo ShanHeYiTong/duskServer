@@ -12,7 +12,9 @@ async function bootstrap() {
     .setTitle('duskWeb前端项目')
     .setDescription('The cats API description')  //简介
     .setVersion('1.0')
+    .addTag('login')
     .addTag('user')
+    .addTag('spider')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);

@@ -34,7 +34,7 @@ import { UserModule } from "./user/user.module";
     }),
     RedisModule,
     UserModule,
-    SpiderModule
+    SpiderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

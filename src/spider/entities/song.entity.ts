@@ -1,19 +1,20 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('songs')
 export class Song {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  title: string;
+  song_number: number;
+
+  @Column({ nullable: true })
+  song_name: string;
 
   @Column()
-  singer: string;
+  artist: string;
 
   @Column()
-  album: string;
+  duration: string;
 
-  @Column()
-  cover: string;
 }
