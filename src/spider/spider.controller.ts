@@ -7,6 +7,19 @@ import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 export class SpiderController {
   constructor(private readonly spiderService: SpiderService) {}
 
+
+  //回去音乐列表
+  @ApiOperation({
+    summary: '获取音乐列表',
+  })
+  @Get('list')
+  async getMusicList() {
+    return  await this.spiderService.getMusicList();
+  }
+
+
+
+
   @Get('one')
   getHello()   {
     return this.spiderService.getHotSongs();

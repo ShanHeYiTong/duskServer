@@ -22,7 +22,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor()) //注册拦截器
   app.useGlobalFilters(new HttpExceptionFilter()); //注册过虑器
-
+  app.enableCors();//允许跨域
   let HOST='localhost'
   let PORT='3000'
   await app.listen(PORT, () => {

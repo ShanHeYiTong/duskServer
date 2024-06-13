@@ -21,6 +21,15 @@ export class SpiderService {
     private readonly httpService: HttpService
   ) {}
 
+  //获取音乐列表
+  async getMusicList(): Promise<any> {
+    return  await this.songRepository.find();
+  }
+
+
+
+
+
   async getHotSongs(): Promise<any> {
     const response = await axios.get('https://y.qq.com/n/yqq/toplist/26.html');
     const $ = cheerio.load(response.data);
