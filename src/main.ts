@@ -5,6 +5,9 @@ import { Logger, ValidationPipe } from "@nestjs/common";
 import { HttpExceptionFilter } from "./global/filter/http-exception/http-exception.filter";
 import { TransformInterceptor } from "./global/interceptor/transform/transform.interceptor";
 
+import * as express from 'express';
+import { join } from 'path';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -23,6 +26,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor()) //注册拦截器
   app.useGlobalFilters(new HttpExceptionFilter()); //注册过虑器
   app.enableCors();//允许跨域
+  app.use('/static', express.static(join(__dirname, '..', 'public')));
   let HOST='localhost'
   let PORT='3000'
   await app.listen(PORT, () => {

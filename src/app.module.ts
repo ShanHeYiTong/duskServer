@@ -8,6 +8,7 @@ import { RedisModule } from "./db/redis/redis.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { UserModule } from "./user/user.module";
+import { HashService } from './hash/hash.service';
 
 @Module({
   imports: [
@@ -37,6 +38,6 @@ import { UserModule } from "./user/user.module";
     SpiderModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, HashService],
 })
 export class AppModule {}

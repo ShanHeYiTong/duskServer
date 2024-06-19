@@ -17,4 +17,6 @@ export class Song {
   @Column()
   duration: string;
 
+  @Column()
+  url: string;
 }

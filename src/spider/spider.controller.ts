@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Param, Post, Query, Res } from "@nestjs/common";
 import { SpiderService } from "./spider.service";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 
@@ -18,17 +18,23 @@ export class SpiderController {
   }
 
 
+  // @Get('one')
+  // getHello()   {
+  //   return this.spiderService.getHotSongs();
+  // }
 
 
-  @Get('one')
-  getHello()   {
-    return this.spiderService.getHotSongs();
-  }
+  // @Get('two')
+  // async findAll() {
+  //   return this.spiderService.findAll();
+  // }
 
-
-  @Get('two')
-  async findAll() {
-    return this.spiderService.findAll();
+  @ApiOperation({
+    summary: '爬取歌手的作品',
+  })
+  @Get('artistWorks')
+  async getArtistWorks(@Query('songName') songName: string) {
+    return this.spiderService.getArtistWorks(songName);
   }
 
   //20024-6-11
@@ -67,5 +73,28 @@ export class SpiderController {
   @Get('test')
   async test() {
     return this.spiderService.test();
+  }
+
+//扫描二维码登录
+
+  //生成二维码
+  @Get('qrcode')
+  async generateQRCode(@Res() res) {
+    const result = await this.spiderService.generateQRCode();
+    res.json(result);
+  }
+
+  //登录
+  @Post('login/:userId')
+  generateToken(@Param('userId') userId: string, @Res() res) {
+    const result = this.spiderService.generateToken(Number(userId));
+    res.json(result);
+  }
+
+  //检查登录状态
+  @Get('check/:userId')
+  checkStatus(@Param('userId') userId: string, @Res() res) {
+    const result = this.spiderService.checkStatus(Number(userId));
+    res.json(result);
   }
 }
