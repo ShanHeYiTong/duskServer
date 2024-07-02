@@ -12,7 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const options = new DocumentBuilder()
-    .setTitle('duskWeb前端项目')
+    .setTitle('duskWeb后端项目')
     .setDescription('The cats API description')  //简介
     .setVersion('1.0')
     .addTag('login')
@@ -28,7 +28,7 @@ async function bootstrap() {
   app.enableCors();//允许跨域
   app.use('/static', express.static(join(__dirname, '..', 'public')));
   let HOST='localhost'
-  let PORT='3000'
+  let PORT='10000'
   await app.listen(PORT, () => {
     Logger.log(`服务已经启动,接口请访问:http://${HOST}:${PORT}`);
   });

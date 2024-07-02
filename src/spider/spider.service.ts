@@ -1,17 +1,21 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import axios from "axios";
 import { HttpService } from "@nestjs/axios";
 import * as cheerio from "cheerio";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Song } from "./entities/song.entity";
-import { lastValueFrom } from "rxjs";
+import { firstValueFrom, lastValueFrom } from "rxjs";
 import * as path from "path";
 import * as fs from "fs";
 import * as crypto from 'crypto';
 import { Song_listEntity } from "./entities/song_list.entity";
 import * as qrcode from 'qrcode';
 import * as jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { QrCode } from "./entities/code.entity";
+import { join } from "path";
+import { exec } from 'child_process';
 
 @Injectable()
 export class SpiderService {
@@ -24,7 +28,10 @@ export class SpiderService {
     private songRepository: Repository<Song>,
     @InjectRepository(Song_listEntity)
     private songListEntityRepository: Repository<Song_listEntity>,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+
+    @InjectRepository(QrCode)
+    private qrCodeRepository: Repository<QrCode>,
   ) {
   }
 
@@ -403,7 +410,10 @@ export class SpiderService {
       token: null,
       time: Date.now(),
     };
+    // const code = await qrcode.toDataURL(`http://192.168.5.109:3000/static/mandate.html?userId=${this.userId}`);
     const code = await qrcode.toDataURL(`http://localhost:3000/static/mandate.html?userId=${this.userId}`);
+    // const code = await qrcode.toDataURL(`${this.userId}`);
+    // const code = await qrcode.toDataURL(`http://192.168.0.176:9500/#/demo`);
     return {
       code,
       userId: this.userId,
@@ -417,6 +427,14 @@ export class SpiderService {
     return { token };
   }
 
+  /**
+   *   const status = {
+   *     0: '未授权',
+   *     1: '已授权',
+   *     2: '超时'
+   *   }
+   * @param userId
+   */
   checkStatus(userId: number): { status: number } {
     const user = this.users[userId];
     if (!user) {
@@ -429,5 +447,80 @@ export class SpiderService {
     } else {
       return { status: 0 };
     }
+  }
+
+  /**
+   * status: 'pending', 'scanned', 'confirmed'
+   */
+  //gpt
+  async generateQrCode(): Promise<QrCode> {
+    const createdQrCode ={
+      uuid: uuidv4(),
+      status: 'pending',
+      createdAt: new Date(),
+    };
+    return this.qrCodeRepository.save(createdQrCode);
+  }
+
+  async getQrCodeStatus(uuid: string): Promise<any> {
+    const qrCode = await this.qrCodeRepository.findOneBy({ uuid });
+    // return qrCode ? qrCode.status : 'not found';
+    return qrCode ? qrCode : 'not found';
+  }
+
+  async updateQrCodeStatus(uuid: string, status: string): Promise<QrCode> {
+    // return this.qrCodeRepository.findOneAndUpdate({ uuid }, { status }, { new: true }).exec();
+    const qrCode = await this.getQrCodeStatus(uuid);
+    // qrCode[0].status = status;
+    const createdQrCode ={
+      uuid: qrCode.uuid,
+      status:status,
+      createdAt: qrCode.createdAt,
+    };
+    return this.qrCodeRepository.save(createdQrCode);
+  }
+
+  // private readonly logger = new Logger(SpiderService.name);
+  //视频转换服务
+  async downloadVideo(videoUrl: string, outputFilePath: string): Promise<void> {
+    console.log(`1 ${videoUrl}`);
+    const response = await firstValueFrom(
+      this.httpService.get(videoUrl, { responseType: 'stream' }),
+    );
+
+    return new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(outputFilePath);
+      console.log("2"+ writer);
+      response.data.pipe(writer);
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+  }
+
+  async extractAudio(videoFilePath: string, audioFilePath: string): Promise<void> {
+    console.log(`3--> ${videoFilePath}`);
+    console.log(`4--> ${audioFilePath}`);
+
+    return new Promise((resolve, reject) => {
+      exec(`ffmpeg -i "${videoFilePath}" -q:a 0 -map a "${audioFilePath}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error extracting audio: ${error.message}`);
+          reject(error);
+        } else {
+          console.log('Audio extracted successfully');
+          resolve();
+        }
+      });
+    });
+  }
+
+  async convertVideoToAudio(videoUrl: string): Promise<string> {
+    const videoFilePath = join(__dirname, 'video.mp4');
+    const audioFilePath = join(__dirname, 'audio.mp3');
+
+    await this.downloadVideo(videoUrl, videoFilePath);
+    await this.extractAudio(videoFilePath, audioFilePath);
+
+    return audioFilePath;
   }
 }

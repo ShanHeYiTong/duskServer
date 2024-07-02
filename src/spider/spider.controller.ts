@@ -1,6 +1,9 @@
 import { Controller, Get, Param, Post, Query, Res } from "@nestjs/common";
 import { SpiderService } from "./spider.service";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
+import * as fs from "fs";
+import { Response } from 'express';
+
 
 @ApiTags('spider') //指定标签
 @Controller('spider')
@@ -96,5 +99,46 @@ export class SpiderController {
   checkStatus(@Param('userId') userId: string, @Res() res) {
     const result = this.spiderService.checkStatus(Number(userId));
     res.json(result);
+  }
+
+  //gpt
+  @ApiOperation({
+    summary: 'gpt测试接口',
+  })
+  @Get('generate-uuid')
+  async generateUuid() {
+    const qrCode = await this.spiderService.generateQrCode();
+    return { uuid: qrCode.uuid };
+  }
+
+  @Get('qrcode-status/:uuid')
+  async getQrCodeStatus(@Param('uuid') uuid: string) {
+    const status = await this.spiderService.getQrCodeStatus(uuid);
+    return { status };
+  }
+
+  @Post('scan/:uuid')
+  async scanQrCode(@Param('uuid') uuid: string) {
+    const updatedQrCode = await this.spiderService.updateQrCodeStatus(uuid, 'scanned');
+    return { status: updatedQrCode.status };
+  }
+
+  @Post('confirm/:uuid')
+  async confirmQrCode(@Param('uuid') uuid: string) {
+    const updatedQrCode = await this.spiderService.updateQrCodeStatus(uuid, 'confirmed');
+    return { status: updatedQrCode.status };
+  }
+
+  //视频转换服务
+  @Get('convert')
+  async convert(@Query('url') videoUrl: string, @Res() res: Response): Promise<void> {
+    const audioFilePath:any = await this.spiderService.convertVideoToAudio(videoUrl);
+    res.download(audioFilePath, 'audio.mp3', (err) => {
+      if (err) {
+        res.status(500).send('Error downloading the file');
+      } else {
+        fs.unlinkSync(audioFilePath); // 删除临时文件
+      }
+    });
   }
 }
