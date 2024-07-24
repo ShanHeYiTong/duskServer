@@ -9,6 +9,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { UserModule } from "./user/user.module";
 import { HashService } from './hash/hash.service';
+import { FileModule } from "./file/file.module";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { HashService } from './hash/hash.service';
     RedisModule,
     UserModule,
     SpiderModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService, HashService],
